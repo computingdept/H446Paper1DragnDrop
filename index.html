@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H446/01 Paper 1 Coding Practice - Drag and Drop</title>
+<style>
+:root { --green:#2f6f4e; --green-dark:#23543b; --bg:#f4f6f5; --card:#ffffff; --muted:#68736d; --line:#d9e1dc; --yellow:#fff8d9; --bad:#fff1f1; --good:#eaf7ef; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:#18231d; }
+header { position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--line); padding:14px 18px 10px; }
+h1 { margin:0 0 8px; font-size:22px; line-height:1.2; }
+.subtitle { color:var(--muted); font-size:14px; margin-bottom:10px; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+button,.pdf-link { border:1px solid var(--green); background:#fff; color:var(--green-dark); border-radius:999px; padding:9px 13px; font-weight:700; cursor:pointer; text-decoration:none; font-size:14px; }
+button.active { background:var(--green); color:#fff; }
+button:hover,.pdf-link:hover { background:#e9f3ee; }
+button.active:hover { background:var(--green-dark); }
+.container { display:grid; grid-template-columns:250px minmax(0,1fr); gap:16px; padding:16px; max-width:1400px; margin:0 auto; }
+aside { position:sticky; top:112px; align-self:start; background:#fff; border:1px solid var(--line); border-radius:18px; padding:12px; max-height:calc(100vh - 130px); overflow:auto; }
+.side-title { font-size:13px; color:var(--muted); font-weight:800; margin:6px 6px 10px; text-transform:uppercase; letter-spacing:.04em; }
+.task-nav { display:flex; flex-direction:column; gap:7px; }
+.task-nav button { border-color:var(--line); border-radius:12px; text-align:left; padding:9px 10px; font-weight:650; color:#26352d; }
+.task-nav button.done { border-color:#8fbaa1; background:#edf8f1; }
+main { min-width:0; }
+.top-panel { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.score { background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 12px; font-weight:800; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:22px; padding:18px; box-shadow:0 10px 25px rgba(20,40,30,.06); margin-bottom:16px; }
+.meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.badge { border:1px solid var(--line); border-radius:999px; padding:5px 9px; color:var(--muted); font-size:13px; font-weight:700; }
+.context { background:var(--yellow); border:1px solid #eadb90; border-radius:16px; padding:12px 14px; margin:12px 0; line-height:1.45; }
+.workspace { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); gap:16px; align-items:start; }
+pre { margin:0; padding:16px; background:#111827; color:#f9fafb; border-radius:16px; overflow:auto; font-size:15px; line-height:1.55; white-space:pre-wrap; tab-size:4; }
+.blank { display:inline-flex; min-width:105px; min-height:30px; border:2px dashed #8aa897; background:#f7faf8; color:#18231d; border-radius:9px; align-items:center; justify-content:center; padding:3px 8px; font-family:inherit; font-weight:800; vertical-align:middle; margin:1px 2px; }
+.blank.filled { border-style:solid; background:#e8f4ed; }
+.blank.correct { border-color:#2f8f56; background:#dff4e7; }
+.blank.wrong { border-color:#bc3f3f; background:#ffe6e6; }
+.tiles { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.tile { background:#fff; border:1px solid #9ab5a6; border-radius:10px; padding:8px 10px; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; cursor:grab; box-shadow:0 2px 5px rgba(0,0,0,.05); }
+.tile.used { opacity:.35; cursor:not-allowed; }
+.help { border-left:5px solid var(--green); background:#f8fbf9; border-radius:16px; padding:14px; }
+.help h3 { margin:0 0 8px; font-size:18px; }
+.help p { margin:8px 0; line-height:1.45; }
+.actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.primary { background:var(--green); color:#fff; }
+.ghost { border-color:var(--line); color:#26352d; }
+.result { margin-top:12px; padding:12px; border-radius:14px; display:none; font-weight:700; }
+.result.good { display:block; background:var(--good); border:1px solid #a7d7b6; }
+.result.bad { display:block; background:var(--bad); border:1px solid #efb0b0; }
+.review-list .review-item { border:1px solid var(--line); border-radius:18px; padding:14px; margin:10px 0; background:#fff; }
+.footer-note { color:var(--muted); font-size:13px; margin-top:6px; }
+.pdf-box { display:none; }
+.pdf-box iframe { width:100%; height:70vh; border:1px solid var(--line); border-radius:16px; background:#fff; }
+@media (max-width:900px) { .container{grid-template-columns:1fr;} aside{position:static;max-height:none;} .workspace{grid-template-columns:1fr;} header{position:static;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>H446/01 Computer Systems — Paper 1 Coding Practice</h1>
+  <div class="subtitle">One-page drag-and-drop fill-in-the-blank practice from Paper 1 coding-style questions. Use drag-and-drop or tap a tile, then tap a blank.</div>
+  <div class="tabs" id="paperTabs"></div>
+</header>
+<div class="container">
+  <aside>
+    <div class="side-title">Questions</div>
+    <div class="task-nav" id="taskNav"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:12px 0;">
+    <button class="ghost" onclick="showReview()">Review mistakes</button>
+    <button class="ghost" onclick="resetAll()">Reset progress</button>
+    <button class="ghost" onclick="togglePdf()">Show / hide PDF</button>
+  </aside>
+  <main>
+    <div class="top-panel">
+      <div class="score" id="scoreBox">Score: 0 / 0</div>
+      <div id="pdfLinks"></div>
+    </div>
+    <section class="pdf-box card" id="pdfBox">
+      <h2 style="margin-top:0;">Source PDF</h2>
+      <iframe id="pdfFrame"></iframe>
+      <p class="footer-note">Use the PDF button for the selected paper if the embedded viewer does not load in your browser.</p>
+    </section>
+    <section id="taskArea"></section>
+    <section id="reviewArea" class="card" style="display:none;"></section>
+  </main>
+</div>
+<script>
+const TASKS = [{"paper": "June 2025", "source": "H44601_Computer_Systems_June_2025.pdf", "topic": "LMC / Assembly", "title": "Q4(b) LMC: output the largest of two numbers", "context": "Kofi needs an LMC program that inputs two different numbers and outputs the larger value. The key idea is to store both inputs, subtract one from the other, then use a branch instruction to choose which value to output.", "prompt": "Fill the missing LMC instructions and labels.", "code": "        INP\n        STA FIRST\n        INP\n        STA SECOND\n        {{blank1}}\n        {{blank2}}\n        LDA FIRST\n        OUT\n        HLT\nOUTPUTSECOND {{blank3}}\n        OUT\n        HLT\nFIRST   DAT 0\nSECOND  DAT 0", "blanks": [{"id": "blank1", "answer": "SUB FIRST"}, {"id": "blank2", "answer": "BRP OUTPUTSECOND"}, {"id": "blank3", "answer": "LDA SECOND"}], "tiles": ["SUB FIRST", "BRP OUTPUTSECOND", "LDA SECOND", "ADD FIRST", "BRZ FIRST", "STA OUTPUTSECOND"], "explanation": "After the second number is loaded, subtract FIRST. If the result is positive or zero, SECOND is larger, so branch to OUTPUTSECOND and load SECOND. Otherwise load and output FIRST.", "fact": "OCR H446 LMC branch logic often depends on the accumulator. BRP branches when the accumulator is zero or positive."}, {"paper": "June 2025", "source": "H44601_Computer_Systems_June_2025.pdf", "topic": "SQL", "title": "Q6(c)(i) SQL INSERT", "context": "The software table stores ProductID, Name, Type and Price. A new product must be inserted into TblSoftware.", "prompt": "Complete the SQL statement to insert the new software product.", "code": "{{blank1}} TblSoftware\n(ProductID, Name, Type, Price)\n{{blank2}}\n(\"DCC07\", \"DCCCast\", \"Sound\", {{blank3}});", "blanks": [{"id": "blank1", "answer": "INSERT INTO"}, {"id": "blank2", "answer": "VALUES"}, {"id": "blank3", "answer": "89.99"}], "tiles": ["INSERT INTO", "VALUES", "89.99", "DELETE FROM", "SELECT", "\"£89.99\""], "explanation": "INSERT INTO names the table, the field list shows the order of data, and VALUES provides the new record. Price is normally stored as a numeric value, so 89.99 is the clean answer.", "fact": "For OCR SQL questions, table and field names must match the question exactly."}, {"paper": "June 2025", "source": "H44601_Computer_Systems_June_2025.pdf", "topic": "SQL", "title": "Q6(c)(ii) SQL nested SELECT", "context": "The program must return the names of products that cost less than the product called DCCDraw. This needs a nested SELECT to find the comparison price first.", "prompt": "Fill the blanks in the nested SELECT.", "code": "SELECT Name FROM TblSoftware\nWHERE Price < (\n    SELECT {{blank1}}\n    FROM {{blank2}}\n    WHERE Name = {{blank3}}\n);", "blanks": [{"id": "blank1", "answer": "Price"}, {"id": "blank2", "answer": "TblSoftware"}, {"id": "blank3", "answer": "\"DCCDraw\""}], "tiles": ["Price", "TblSoftware", "\"DCCDraw\"", "Name", "TblAccessLog", "DCCDraw"], "explanation": "The inner SELECT finds the Price of DCCDraw. The outer SELECT then returns product names where Price is lower than that result.", "fact": "A nested SELECT runs inside another query and can be used as the comparison value."}, {"paper": "June 2025", "source": "H44601_Computer_Systems_June_2025.pdf", "topic": "JavaScript / Web", "title": "Q8(d) JavaScript: check multiple-choice answers", "context": "The quiz webpage checks each response against an answer array. If a response is correct, it writes Correct into the matching feedback element and increases the score.", "prompt": "Complete the missing parts of the function.", "code": "function checkAnswers(responses, feedbacks, {{blank1}})\n{\n    var {{blank2}} = 0;\n    for(var qCount = 0; qCount < responses.length; qCount++)\n    {\n        response = document.getElementById(responses[qCount]).innerHTML;\n        answer = answers[{{blank3}}];\n        feedbackElement = document.getElementById(feedbacks[qCount]);\n        if (response == answer)\n        {\n            score = {{blank4}};\n            feedbackElement.innerHTML = \"Correct\";\n        }\n    }\n    {{blank5}} score;\n}", "blanks": [{"id": "blank1", "answer": "answers"}, {"id": "blank2", "answer": "score"}, {"id": "blank3", "answer": "qCount"}, {"id": "blank4", "answer": "score + 1"}, {"id": "blank5", "answer": "return"}], "tiles": ["answers", "score", "qCount", "score + 1", "return", "responses", "feedbacks", "print"], "explanation": "The answers array is passed in as a parameter. qCount is used as the index. Each correct response increments score, and the function returns the final score.", "fact": "Client-side JavaScript can change page content using the DOM, for example document.getElementById(...).innerHTML."}, {"paper": "June 2025", "source": "H44601_Computer_Systems_June_2025.pdf", "topic": "OOP", "title": "Q9 Dog class constructor", "context": "OCR DogCare stores each dog as an instance of class Dog. Each dog has private attributes and the constructor sets them from parameters.", "prompt": "Complete the constructor-style class definition.", "code": "class Dog\n    private name\n    private breed\n    private height\n    private weight\n\n    public procedure new(pName, pBreed, pHeight, pWeight)\n        name = {{blank1}}\n        breed = {{blank2}}\n        height = {{blank3}}\n        weight = {{blank4}}\n    endprocedure\nendclass", "blanks": [{"id": "blank1", "answer": "pName"}, {"id": "blank2", "answer": "pBreed"}, {"id": "blank3", "answer": "pHeight"}, {"id": "blank4", "answer": "pWeight"}], "tiles": ["pName", "pBreed", "pHeight", "pWeight", "name", "breed", "height", "weight"], "explanation": "The constructor receives parameters and copies each one into the matching private attribute.", "fact": "A constructor initialises a new object. Private attributes should normally be accessed through methods."}, {"paper": "June 2024", "source": "H44601_Computer_Systems_June_2024.pdf", "topic": "LMC / Assembly", "title": "Q1(d)(ii) LMC Fibonacci repair", "context": "Orla's Fibonacci code must keep the old value of B temporarily before updating A and B. TEMP is used so the previous B is not lost.", "prompt": "Fill the missing LMC instructions and DAT label.", "code": "START LDA MAX\n      BRZ END\n      LDA A\n      OUT\n      {{blank1}}\n      STA TEMP\n      {{blank2}}\n      ADD B\n      STA B\n      {{blank3}}\n      STA A\n      LDA MAX\n      SUB ONE\n      STA MAX\n      BRA START\nEND   HLT\nA     DAT 0\nB     DAT 1\n{{blank4}} DAT 0\nMAX   DAT 5\nONE   DAT 1", "blanks": [{"id": "blank1", "answer": "LDA B"}, {"id": "blank2", "answer": "LDA A"}, {"id": "blank3", "answer": "LDA TEMP"}, {"id": "blank4", "answer": "TEMP"}], "tiles": ["LDA B", "LDA A", "LDA TEMP", "TEMP", "STA A", "ADD A", "LDA MAX", "ONE"], "explanation": "The old B is stored in TEMP. A + B becomes the new B. Then old B is loaded back from TEMP and stored into A.", "fact": "In LMC, the accumulator only holds one value at a time, so DAT labels are often used as temporary storage."}, {"paper": "June 2024", "source": "H44601_Computer_Systems_June_2024.pdf", "topic": "Floating point", "title": "Q4(d) Normalising floating point", "context": "The unnormalised mantissa starts with too many matching leading bits. To normalise a positive mantissa, shift the point until it starts 01, then adjust the exponent.", "prompt": "Complete the normalised answer from the working.", "code": "Original mantissa/exponent:\n00001011 0111\n\nReduce exponent to {{blank1}}\nNew mantissa starts {{blank2}}\nFinal 8-bit mantissa = {{blank3}}\nFinal 4-bit exponent = {{blank4}}", "blanks": [{"id": "blank1", "answer": "4"}, {"id": "blank2", "answer": "01011"}, {"id": "blank3", "answer": "01011000"}, {"id": "blank4", "answer": "0100"}], "tiles": ["4", "01011", "01011000", "0100", "0111", "00001011", "10110000", "0011"], "explanation": "The point is shifted to normalise the mantissa. The exponent is reduced by 3, giving 4, represented as 0100.", "fact": "A positive normalised two's-complement mantissa begins 01; a negative one begins 10."}, {"paper": "June 2024", "source": "H44601_Computer_Systems_June_2024.pdf", "topic": "Logic / Boolean", "title": "Q5(b) Boolean simplification", "context": "This task practises common Boolean algebra rules: De Morgan, double negation and distribution.", "prompt": "Fill the simplified expressions.", "code": "¬A v ¬B  simplifies using De Morgan to  {{blank1}}\n\n¬(¬B)    simplifies using double negation to  {{blank2}}\n\n(A v B) ∧ (A v C) simplifies using distribution to {{blank3}}", "blanks": [{"id": "blank1", "answer": "¬(A ∧ B)"}, {"id": "blank2", "answer": "B"}, {"id": "blank3", "answer": "A v (B ∧ C)"}], "tiles": ["¬(A ∧ B)", "B", "A v (B ∧ C)", "¬(A v B)", "¬B", "A ∧ (B v C)"], "explanation": "De Morgan changes OR to AND when the negation covers the whole expression. Double negation cancels. Distribution pulls out the repeated A.", "fact": "OCR accepts different Boolean notation, but the logic must be equivalent."}, {"paper": "June 2024", "source": "H44601_Computer_Systems_June_2024.pdf", "topic": "Trees / Arrays", "title": "Q8(a/b) Binary tree array storage", "context": "A binary search tree is stored in a 2D array. Each row represents one node, with columns for left pointer, data and right pointer.", "prompt": "Complete the declaration and column idea.", "code": "Declare the array:\ntowns = array[{{blank1}}, {{blank2}}]\n\nColumn 0 stores the {{blank3}} pointer.\nColumn 1 stores the {{blank4}}.\nColumn 2 stores the right pointer.", "blanks": [{"id": "blank1", "answer": "8"}, {"id": "blank2", "answer": "3"}, {"id": "blank3", "answer": "left"}, {"id": "blank4", "answer": "data"}], "tiles": ["8", "3", "left", "data", "right", "2", "town", "pointer"], "explanation": "The question states the array has 8 rows and 3 columns. The three columns store left pointer, data, and right pointer.", "fact": "A binary tree stored in an array often uses pointer columns to show links between rows."}, {"paper": "June 2023", "source": "H44601_Computer_Systems_June_2023.pdf", "topic": "Stack / Pseudocode", "title": "Q2(a) Stack calculator algorithm", "context": "The algorithm uses an initially empty stack. A means add two popped values. S means subtract the first popped value from the second. E means pop and output one value, then end.", "prompt": "Complete the missing conditions and stack operations.", "code": "do\n    value = input(\"Enter a value\")\n    if {{blank1}} then\n        num = numbers.pop()\n        print(num)\n    elseif value == \"A\" or {{blank2}} then\n        numone = numbers.pop()\n        numtwo = numbers.pop()\n        if value == \"A\" then\n            numbers.push{{blank3}}\n        elseif value == \"S\" then\n            numbers.push(numtwo - numone)\n        endif\n    else\n        numbers.push({{blank4}})\n    endif\nuntil value == {{blank5}}", "blanks": [{"id": "blank1", "answer": "value == \"E\""}, {"id": "blank2", "answer": "value == \"S\""}, {"id": "blank3", "answer": "(numone + numtwo)"}, {"id": "blank4", "answer": "value"}, {"id": "blank5", "answer": "\"E\""}], "tiles": ["value == \"E\"", "value == \"S\"", "(numone + numtwo)", "value", "\"E\"", "numtwo + numone", "value = \"S\"", "numbers.pop()"], "explanation": "E triggers output and end. A and S both pop two values. For A, push the addition result. Other inputs are pushed to the stack.", "fact": "A stack is LIFO: the last value pushed is the first value popped."}, {"paper": "June 2023", "source": "H44601_Computer_Systems_June_2023.pdf", "topic": "HTML / CSS", "title": "Q4(d)(i) HTML form and link", "context": "The robot web interface displays a heading, a bullet list, a link, a Login label and a password box with a submit button.", "prompt": "Fill the HTML blanks.", "code": "<h1>Robot prime directives</h1>\n{{blank1}}\n    <li>Serve the company trust</li>\n    <li>Protect data</li>\n    <li>Uphold standards</li>\n{{blank2}}\n\n<a {{blank3}} = \"updates.html\">Updates</a>\n<p>{{blank4}}</p>\n\n<form action=\"dologin.php\">\n    Password\n    <input type = \"{{blank5}}\" name=\"pw\">\n    <input type = \"{{blank6}}\">\n</form>", "blanks": [{"id": "blank1", "answer": "<ul>"}, {"id": "blank2", "answer": "</ul>"}, {"id": "blank3", "answer": "href"}, {"id": "blank4", "answer": "Login"}, {"id": "blank5", "answer": "password"}, {"id": "blank6", "answer": "submit"}], "tiles": ["<ul>", "</ul>", "href", "Login", "password", "submit", "src", "text"], "explanation": "A bulleted list uses ul. A link uses href. The password input hides typed characters and submit creates the button.", "fact": "In HTML, href is used for hyperlinks; src is used for sources such as images."}, {"paper": "June 2023", "source": "H44601_Computer_Systems_June_2023.pdf", "topic": "SQL", "title": "Q4(f)(i) SQL DELETE", "context": "The access log table stores users. Records with UserType of NotNeeded must be removed.", "prompt": "Complete the SQL DELETE statement.", "code": "{{blank1}} TblAccessLog\n{{blank2}} UserType = {{blank3}};", "blanks": [{"id": "blank1", "answer": "DELETE FROM"}, {"id": "blank2", "answer": "WHERE"}, {"id": "blank3", "answer": "\"NotNeeded\""}], "tiles": ["DELETE FROM", "WHERE", "\"NotNeeded\"", "SELECT FROM", "UserType", "NotNeeded"], "explanation": "DELETE FROM gives the table. WHERE limits the deletion to records with UserType equal to NotNeeded.", "fact": "Without a WHERE clause, DELETE can remove all records from a table."}, {"paper": "June 2023", "source": "H44601_Computer_Systems_June_2023.pdf", "topic": "Files / Pseudocode", "title": "Q5(b) Write values to a text file", "context": "The user enters an integer. The program passes it to doCheck(), then stores both the original input and the returned value in storedvalues.txt.", "prompt": "Complete the file-writing algorithm.", "code": "num = input(\"enter a number\")\nvalue = {{blank1}}(num)\ntxtfile = openWrite({{blank2}})\ntxtfile.writeLine({{blank3}})\ntxtfile.writeLine({{blank4}})\n{{blank5}}", "blanks": [{"id": "blank1", "answer": "doCheck"}, {"id": "blank2", "answer": "\"storedvalues.txt\""}, {"id": "blank3", "answer": "num"}, {"id": "blank4", "answer": "value"}, {"id": "blank5", "answer": "txtfile.close()"}], "tiles": ["doCheck", "\"storedvalues.txt\"", "num", "value", "txtfile.close()", "storedvalues.txt", "openRead", "total"], "explanation": "The function call must use doCheck exactly. The file name is a string. Both values are written, then the file is closed.", "fact": "In pseudocode file questions, opening and closing the file is often part of the mark scheme."}, {"paper": "June 2022", "source": "H44601_Computer_Systems_June_2022.pdf", "topic": "LMC / Assembly", "title": "Q1(c)(ii) LMC reset total", "context": "The charity donation program stores a running total. The task is to reset the memory location total to zero and halt.", "prompt": "Complete one valid LMC reset routine.", "code": "        LDA {{blank1}}\n        STA {{blank2}}\n        {{blank3}}\nzero    DAT {{blank4}}", "blanks": [{"id": "blank1", "answer": "zero"}, {"id": "blank2", "answer": "total"}, {"id": "blank3", "answer": "HLT"}, {"id": "blank4", "answer": "0"}], "tiles": ["zero", "total", "HLT", "0", "donation", "OUT", "DAT", "END"], "explanation": "Load the zero value, store it into total, then halt. The DAT line defines the zero value.", "fact": "LMC labels are case-sensitive in OCR mark schemes when the question gives a label such as total."}, {"paper": "June 2022", "source": "H44601_Computer_Systems_June_2022.pdf", "topic": "SQL", "title": "Q2(b) SQL JOIN for customers who see adverts", "context": "Membership stores Username and FirstName. Package stores whether adverts are shown. PackageType links the tables.", "prompt": "Complete the JOIN query.", "code": "SELECT Username, FirstName\nFROM Membership\nJOIN Package ON Membership.{{blank1}} = Package.{{blank2}}\nWHERE {{blank3}} = {{blank4}};", "blanks": [{"id": "blank1", "answer": "PackageType"}, {"id": "blank2", "answer": "PackageType"}, {"id": "blank3", "answer": "Adverts"}, {"id": "blank4", "answer": "true"}], "tiles": ["PackageType", "PackageType", "Adverts", "true", "Username", "false", "MembershipID", "Package"], "explanation": "PackageType links the Membership and Package tables. The WHERE clause filters only packages where Adverts is true.", "fact": "A foreign key links to a primary key in another table; here PackageType in Membership links to PackageType in Package."}, {"paper": "June 2022", "source": "H44601_Computer_Systems_June_2022.pdf", "topic": "OOP", "title": "Q2(g)(i) Video class constructor", "context": "The video class stores name, number of views and star rating. The constructor receives the name and sets default values for views and rating.", "prompt": "Fill the missing private attributes and constructor assignments.", "code": "class video\n    private name\n    private {{blank1}}\n    private {{blank2}}\n\n    public procedure new(newname)\n        name = {{blank3}}\n        views = {{blank4}}\n        starrating = {{blank5}}\n    endprocedure\nendclass", "blanks": [{"id": "blank1", "answer": "views"}, {"id": "blank2", "answer": "starrating"}, {"id": "blank3", "answer": "newname"}, {"id": "blank4", "answer": "0"}, {"id": "blank5", "answer": "3"}], "tiles": ["views", "starrating", "newname", "0", "3", "name", "rating", "number"], "explanation": "The constructor sets the name from the parameter and initialises the number of views to 0 and star rating to 3.", "fact": "For OCR OOP questions, constructor parameters should match what the question says is passed in."}, {"paper": "June 2022", "source": "H44601_Computer_Systems_June_2022.pdf", "topic": "OOP", "title": "Q2(g)(ii) updateviews method", "context": "After a video has been watched, the public method updateviews() increases the stored view count by one.", "prompt": "Complete the method.", "code": "public procedure {{blank1}}()\n    views = views {{blank2}} {{blank3}}\nendprocedure", "blanks": [{"id": "blank1", "answer": "updateviews"}, {"id": "blank2", "answer": "+"}, {"id": "blank3", "answer": "1"}], "tiles": ["updateviews", "+", "1", "getviews", "-", "0"], "explanation": "The method is public and increments the existing views attribute by one.", "fact": "A procedure does not return a value; a function returns a value."}, {"paper": "June 2022", "source": "H44601_Computer_Systems_June_2022.pdf", "topic": "String / ASCII", "title": "Q5(e)(i) Count capital letters", "context": "The function loops through each character in a string. Capital letters have ASCII values from 65 to 90 inclusive.", "prompt": "Fill the missing selection, counter update and return statement.", "code": "function countCapitals(text)\n    capCount = 0\n    for x = 0 to text.length-1\n        c = text.subString(x, 1)\n        if asc(c) >= 65 {{blank1}} then\n            {{blank2}}\n        endif\n    next x\n    {{blank3}}\nendfunction", "blanks": [{"id": "blank1", "answer": "and asc(c) <= 90"}, {"id": "blank2", "answer": "capCount = capCount + 1"}, {"id": "blank3", "answer": "return capCount"}], "tiles": ["and asc(c) <= 90", "capCount = capCount + 1", "return capCount", "or asc(c) <= 90", "capCount = 1", "print capCount"], "explanation": "A capital letter must be at least 65 and at most 90. Each match increments the counter. The function returns the final count.", "fact": "ASCII stores characters as numeric codes; Unicode can represent many more characters."}];
+let currentPaper = "June 2025";
+let currentIndex = 0;
+let selectedTile = null;
+let attempts = JSON.parse(localStorage.getItem("h446paper1DragAttempts") || "{}");
+
+function papers() { return [...new Set(TASKS.map(t => t.paper))].sort((a,b)=>b.localeCompare(a)); }
+function filteredTasks() { return TASKS.filter(t => t.paper === currentPaper); }
+function currentTask() { return filteredTasks()[currentIndex] || filteredTasks()[0]; }
+function keyFor(task) { return task.paper + "::" + task.title; }
+function saveAttempts() { localStorage.setItem("h446paper1DragAttempts", JSON.stringify(attempts)); }
+
+function renderTabs() {
+  const tabs = document.getElementById("paperTabs"); tabs.innerHTML = "";
+  papers().forEach(p => {
+    const b = document.createElement("button");
+    b.textContent = p; b.className = p === currentPaper ? "active" : "";
+    b.onclick = () => { currentPaper = p; currentIndex = 0; selectedTile = null; renderAll(); };
+    tabs.appendChild(b);
+  });
+}
+function renderNav() {
+  const nav = document.getElementById("taskNav"); nav.innerHTML = "";
+  filteredTasks().forEach((t,i) => {
+    const b = document.createElement("button");
+    const st = attempts[keyFor(t)];
+    b.className = st && st.correct ? "done" : "";
+    b.innerHTML = `<strong>${i+1}.</strong> ${t.topic}<br><span style="font-size:12px;color:#68736d">${escapeHtml(t.title.replace(/^Q\d+\(?[a-z]?\)?\s*/,''))}</span>`;
+    b.onclick = () => { currentIndex = i; selectedTile = null; renderTask(); renderNav(); };
+    nav.appendChild(b);
+  });
+}
+function renderPdfLinks() {
+  const wrap = document.getElementById("pdfLinks");
+  const t = currentTask();
+  wrap.innerHTML = `<a class="pdf-link" href="${t.source}" target="_blank">Open source PDF: ${t.paper}</a>`;
+  document.getElementById("pdfFrame").src = t.source;
+}
+function makeCodeHtml(code, task) {
+  let safe = escapeHtml(code);
+  task.blanks.forEach(b => {
+    const token = "{{" + b.id + "}}";
+    safe = safe.split(escapeHtml(token)).join(`<span class="blank" data-blank="${b.id}" ondragover="event.preventDefault()" ondrop="dropTile(event)" onclick="fillBlankByTap(event)">Drop here</span>`);
+  });
+  return safe;
+}
+function renderTask() {
+  document.getElementById("reviewArea").style.display = "none";
+  const area = document.getElementById("taskArea");
+  const t = currentTask();
+  const st = attempts[keyFor(t)] || null;
+  renderPdfLinks();
+  area.innerHTML = `
+    <article class="card">
+      <div class="meta"><span class="badge">${t.paper}</span><span class="badge">${t.topic}</span></div>
+      <h2 style="margin:0 0 8px;">${escapeHtml(t.title)}</h2>
+      <div class="context"><strong>Context:</strong> ${escapeHtml(t.context)}</div>
+      <p><strong>Task:</strong> ${escapeHtml(t.prompt)}</p>
+      <div class="workspace">
+        <div>
+          <pre id="codeBlock">${makeCodeHtml(t.code, t)}</pre>
+          <div class="tiles" id="tiles"></div>
+          <div class="actions">
+            <button class="primary" onclick="checkTask()">Check answer</button>
+            <button class="ghost" onclick="showAnswers()">Show answer</button>
+            <button class="ghost" onclick="clearTask()">Clear</button>
+            <button class="ghost" onclick="nextTask()">Next</button>
+          </div>
+          <div id="result" class="result"></div>
+        </div>
+        <aside class="help" style="position:static;max-height:none;">
+          <h3>Worked explanation</h3>
+          <p id="explainText">${st && st.checked ? escapeHtml(t.explanation) : "Check your answer to reveal the worked explanation."}</p>
+          <p><strong>OCR fact:</strong> ${escapeHtml(t.fact)}</p>
+          <p class="footer-note">Tip: tap a tile, then tap a blank if dragging is awkward on a touch screen.</p>
+        </aside>
+      </div>
+    </article>`;
+  renderTiles(t);
+  if (st && st.fills) restoreFills(st.fills);
+  if (st && st.checked) showStoredResult(t, st);
+  updateScore();
+}
+function renderTiles(t) {
+  const tileBox = document.getElementById("tiles"); tileBox.innerHTML = "";
+  t.tiles.forEach(txt => {
+    const span = document.createElement("span");
+    span.className = "tile"; span.draggable = true; span.textContent = txt; span.dataset.value = txt;
+    span.ondragstart = (e) => { e.dataTransfer.setData("text/plain", txt); };
+    span.onclick = () => { document.querySelectorAll(".tile").forEach(el => el.style.outline = ""); selectedTile = txt; span.style.outline = "3px solid #2f6f4e"; };
+    tileBox.appendChild(span);
+  });
+}
+function fillBlankByTap(e) {
+  if (!selectedTile) return;
+  const blank = e.target.closest(".blank");
+  blank.textContent = selectedTile; blank.classList.add("filled");
+  storeCurrentFills(); markUsedTiles();
+}
+function dropTile(e) {
+  e.preventDefault();
+  const value = e.dataTransfer.getData("text/plain");
+  const blank = e.target.closest(".blank");
+  blank.textContent = value; blank.classList.add("filled");
+  storeCurrentFills(); markUsedTiles();
+}
+function getFills() {
+  const fills = {};
+  document.querySelectorAll(".blank").forEach(b => fills[b.dataset.blank] = b.textContent === "Drop here" ? "" : b.textContent);
+  return fills;
+}
+function storeCurrentFills() {
+  const t = currentTask(); const k = keyFor(t);
+  attempts[k] = attempts[k] || {};
+  attempts[k].fills = getFills();
+  saveAttempts();
+}
+function restoreFills(fills) {
+  document.querySelectorAll(".blank").forEach(b => {
+    if (fills[b.dataset.blank]) { b.textContent = fills[b.dataset.blank]; b.classList.add("filled"); }
+  });
+  markUsedTiles();
+}
+function markUsedTiles() {
+  const used = new Set(Object.values(getFills()).filter(Boolean));
+  document.querySelectorAll(".tile").forEach(tile => { tile.classList.toggle("used", used.has(tile.dataset.value)); });
+}
+function checkTask() {
+  const t = currentTask(); const fills = getFills(); let correct = true;
+  document.querySelectorAll(".blank").forEach(b => {
+    const ans = t.blanks.find(x => x.id === b.dataset.blank).answer;
+    const ok = (fills[b.dataset.blank] || "").trim() === ans.trim();
+    b.classList.toggle("correct", ok); b.classList.toggle("wrong", !ok);
+    if (!ok) correct = false;
+  });
+  const k = keyFor(t);
+  attempts[k] = {fills, checked:true, correct, timestamp:Date.now()};
+  saveAttempts(); showStoredResult(t, attempts[k]);
+  document.getElementById("explainText").textContent = t.explanation;
+  renderNav(); updateScore();
+}
+function showStoredResult(t, st) {
+  const result = document.getElementById("result"); if (!result) return;
+  result.className = "result " + (st.correct ? "good" : "bad");
+  result.textContent = st.correct ? "Correct — well done." : "Not quite. Check the red blanks, then try again or show the answer.";
+}
+function showAnswers() {
+  const t = currentTask(); const fills = {};
+  document.querySelectorAll(".blank").forEach(b => {
+    const ans = t.blanks.find(x => x.id === b.dataset.blank).answer;
+    b.textContent = ans; b.classList.add("filled","correct"); b.classList.remove("wrong");
+    fills[b.dataset.blank] = ans;
+  });
+  const k = keyFor(t);
+  attempts[k] = {fills, checked:true, correct:true, shown:true, timestamp:Date.now()};
+  saveAttempts();
+  document.getElementById("explainText").textContent = t.explanation;
+  showStoredResult(t, attempts[k]);
+  markUsedTiles(); renderNav(); updateScore();
+}
+function clearTask() {
+  const t = currentTask(); delete attempts[keyFor(t)]; saveAttempts(); renderTask(); renderNav();
+}
+function nextTask() {
+  const list = filteredTasks(); currentIndex = (currentIndex + 1) % list.length; selectedTile = null; renderTask(); renderNav();
+}
+function updateScore() {
+  const done = TASKS.filter(t => attempts[keyFor(t)] && attempts[keyFor(t)].correct).length;
+  document.getElementById("scoreBox").textContent = `Score: ${done} / ${TASKS.length}`;
+}
+function showReview() {
+  document.getElementById("taskArea").innerHTML = "";
+  const review = document.getElementById("reviewArea"); review.style.display = "block";
+  const wrong = TASKS.filter(t => attempts[keyFor(t)] && attempts[keyFor(t)].checked && !attempts[keyFor(t)].correct);
+  if (wrong.length === 0) {
+    review.innerHTML = `<h2>Review mistakes</h2><p>No incorrect checked answers yet. Try a few questions, then come back here.</p>`;
+    return;
+  }
+  const list = wrong.map(t => {
+    const st = attempts[keyFor(t)];
+    const items = t.blanks.map(b => {
+      const yours = (st.fills && st.fills[b.id]) ? st.fills[b.id] : "blank";
+      const ok = yours === b.answer;
+      return `<li>${escapeHtml(b.id)}: your answer <code>${escapeHtml(yours)}</code>; correct answer <code>${escapeHtml(b.answer)}</code> ${ok ? "✓" : "✗"}</li>`;
+    }).join("");
+    return `<div class="review-item">
+      <h3>${escapeHtml(t.paper)} — ${escapeHtml(t.title)}</h3>
+      <p><strong>Context:</strong> ${escapeHtml(t.context)}</p>
+      <ul>${items}</ul>
+      <p><strong>Explanation:</strong> ${escapeHtml(t.explanation)}</p>
+      <p><strong>OCR fact:</strong> ${escapeHtml(t.fact)}</p>
+      <p><a href="${t.source}" target="_blank">Open source PDF</a></p>
+    </div>`;
+  }).join("");
+  review.innerHTML = `<h2>Review mistakes</h2><p>Use this list to see what needs fixing.</p><div class="review-list">${list}</div>`;
+}
+function resetAll() {
+  if (!confirm("Reset all answers and scores?")) return;
+  attempts = {}; saveAttempts(); renderAll();
+}
+function togglePdf() {
+  const box = document.getElementById("pdfBox");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+function renderAll() { renderTabs(); renderNav(); renderTask(); }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+renderAll();
+</script>
+</body>
+</html>
